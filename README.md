@@ -5,7 +5,14 @@ This is a pure Nim implementation.
 
 NOTE: This is a work-in-progress. Do not use for anything important.
 
-# Usage
+# Test
+```
+$ nimble test
+or for better benchmarks:
+$ nimble -d:release --opt:fast --passC:-march=native test
+```
+
+# Run
 ```nim
 import xxx
 
