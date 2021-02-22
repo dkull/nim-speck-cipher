@@ -52,19 +52,18 @@ test "can encrypt":
   check (output == ct)
 
 test "can encrypt_otf":
-  var out_ints: array[2, uint64] = [uint64(0), 0]
-  encrypt_otf(out_ints, pt_ints, key_ints)
-  check (ct_ints == out_ints)
+  var output: array[16, byte]
+  encrypt_otf(output, pt, key)
+  check (output == ct)
 
 test "can decrypt":
-  var out_ints: array[2, uint64] = [uint64(0), 0]
-  decrypt(out_ints, ct_ints, rks)
-  check (pt_ints == out_ints)
+  var output: array[16, byte]
+  decrypt(output, ct, rks)
+  check (output == pt)
 
 test "bench":
   const ITERS = 1_000_000
   var
-    out_ints: array[2, uint64] = [uint64(0), 0]
     output: array[16, byte]
     begin = getMonoTime()
     delta = (getMonoTime() - begin).inMilliseconds()
@@ -79,13 +78,13 @@ test "bench":
   # benchmark
   begin = getMonoTime()
   for i in 0..ITERS:
-    encrypt_otf(out_ints, out_ints, key_ints)
+    encrypt_otf(output, pt, key)
   delta = (getMonoTime() - begin).inMilliseconds()
   echo "encrypt_otf - 1 mil blocks in ", $delta, " ms"
 
   # benchmark
   begin = getMonoTime()
   for i in 0..ITERS:
-    decrypt(out_ints, out_ints, rks)
+    decrypt(output, ct, rks)
   delta = (getMonoTime() - begin).inMilliseconds()
   echo "decrypt - 1 mil blocks in ", $delta, " ms"

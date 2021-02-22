@@ -38,7 +38,7 @@ encrypt_otf(ct_2, pt, key)
 check (ct_1 == ct_2)
 
 # decrypt the ct using the round keys
-decrypt(pt_out, ct, rks)
+decrypt(pt_out, ct_1, rks)
 
 check (pt_out == pt)
 ```

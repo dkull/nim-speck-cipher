@@ -73,19 +73,24 @@ proc key_schedule*(key: array[16, byte], rks: var array[ROUNDS, uint64]) =
 
   rks[ROUNDS-1] = a
 
-proc encrypt_otf*(ct: var array[2, uint64], pt: array[2, uint64], key: array[2, uint64]) =
+proc encrypt_otf*(ct: var array[16, byte], pt: array[16, byte], key: array[16, byte]) =
   # encrypt a block of plaintext. the round keys are calculated on-the-fly
   # this method is somewhat slower than encrypt due to extra work done for every round
   var
-    A = key[0]
-    B = key[1]
+    key_inp = to_input(key)
+    pt_inp = to_input(pt)
+    ct_inp = to_input(ct)
+    a = key_inp[0]
+    b = key_inp[1]
 
-  ct[0] = pt[0]
-  ct[1] = pt[1]
+  ct_inp[0] = pt_inp[0]
+  ct_inp[1] = pt_inp[1]
 
   for i in 0..<ROUNDS:
-    ER(ct[1], ct[0], A)
-    ER(B, A, uint64(i))
+    ER(ct_inp[1], ct_inp[0], a)
+    ER(b, a, uint64(i))
+
+  ct = to_output(ct_inp)
 
 proc encrypt*(ct: var array[16, byte], pt: array[16, byte], rks: array[ROUNDS, uint64]) =
   # encrypt a block of plaintext. needs the precomputed roundkeys.
@@ -101,10 +106,15 @@ proc encrypt*(ct: var array[16, byte], pt: array[16, byte], rks: array[ROUNDS, u
 
   ct = to_output(ct2)
 
-proc decrypt*(pt: var array[2, uint64], ct: array[2, uint64], rks: array[ROUNDS, uint64]) =
+proc decrypt*(pt: var array[16, byte], ct: array[16, byte], rks: array[ROUNDS, uint64]) =
   # decrypt a block of plaintext. needs the precomputed roundkeys.
-  pt[0] = ct[0]
-  pt[1] = ct[1]
+  var
+    pt_inp = to_input(pt)
+    ct_inp = to_input(ct)
+  pt_inp[0] = ct_inp[0]
+  pt_inp[1] = ct_inp[1]
 
   for i in countdown(ROUNDS-1, 0):
-    DR(pt[1], pt[0], rks[i])
+    DR(pt_inp[1], pt_inp[0], rks[i])
+
+  pt = to_output(pt_inp)
