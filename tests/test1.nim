@@ -1,5 +1,5 @@
 import unittest
-import nim_speck_cipher
+import speck_cipher
 
 import parseutils
 import strutils
