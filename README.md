@@ -14,9 +14,9 @@ $ nimble -d:release --opt:fast --passC:-march=native test
 
 # Run
 ```nim
-import xxx
+import speck_cipher
 
-const
+var
   key: array[16, byte]
   pt: array[16, byte]
 
@@ -35,10 +35,10 @@ encrypt(ct_1, pt, rks)
 # round keys calculated on-the-fly
 encrypt_otf(ct_2, pt, key)
 
-check (ct_1 == ct_2)
+assert(ct_1 == ct_2)
 
 # decrypt the ct using the round keys
 decrypt(pt_out, ct_1, rks)
 
-check (pt_out == pt)
+assert(pt_out == pt)
 ```
