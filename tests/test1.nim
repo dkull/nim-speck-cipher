@@ -24,10 +24,10 @@ for i in 0..15:
 for i in 0..15:
   ct[i] = fromHex[byte](ct_hex[i*2..(i*2)+1])
 
-let
-  pt_ints = [fromHex[uint64](pt_hex[16..31]), fromHex[uint64](pt_hex[0..15])]
-  key_ints = [fromHex[uint64](key_hex[16..31]), fromHex[uint64](key_hex[0..15])]
-  ct_ints = [fromHex[uint64](ct_hex[16..31]), fromHex[uint64](ct_hex[0..15])]
+#let
+#  pt_ints = [fromHex[uint64](pt_hex[16..31]), fromHex[uint64](pt_hex[0..15])]
+#  key_ints = [fromHex[uint64](key_hex[16..31]), fromHex[uint64](key_hex[0..15])]
+#  ct_ints = [fromHex[uint64](ct_hex[16..31]), fromHex[uint64](ct_hex[0..15])]
 
 # do the key schedule
 var
