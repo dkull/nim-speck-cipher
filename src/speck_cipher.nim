@@ -22,6 +22,13 @@ proc to_input*(data: array[16, byte]): array[2, uint64] {.inline.} =
   return [b, a]
 
 proc to_output*(data: array[2, uint64]): array[16, byte] {.inline.} =
+  #[
+  # ~20% slower
+  for i in 0..15:
+    let idx = if i <= 7: 1 else: 0
+    result[i] = byte(data[idx] shr (64 - ((i + 1) * 8)) and 0xff)
+  ]#
+
   result[0] = byte(data[1] shr 56 and 0xff)
   result[1] = byte(data[1] shr 48 and 0xff)
   result[2] = byte(data[1] shr 40 and 0xff)

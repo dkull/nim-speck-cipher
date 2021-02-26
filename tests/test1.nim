@@ -1,90 +1,69 @@
 import unittest
 import speck_cipher
 
+import strformat
 import parseutils
 import strutils
 import times
 import std/monotimes
 
 # vectors from page 42 in https://eprint.iacr.org/2013/404.pdf
-let
-  pt_hex = "6c617669757165207469206564616d20"
-  key_hex = "0f0e0d0c0b0a09080706050403020100"
-  ct_hex = "a65d9851797832657860fedf5c570d18"
+let test_vectors = [
+  ("6c617669757165207469206564616d20", "0f0e0d0c0b0a09080706050403020100", "a65d9851797832657860fedf5c570d18"),
+  #("206D616465206974206571756976616C", "000102030405060708090A0B0C0D0E0F", "180D575CDFFE60786532787951985DA6"),
+]
 
-var
-  pt: array[16, byte]
-  key: array[16, byte]
-  ct: array[16, byte]
+proc run_test(pt_hex: string, key_hex:string, ct_hex:string): bool =
+  var
+    pt: array[16, byte]
+    key: array[16, byte]
+    ct: array[16, byte]
+    rks: array[32, uint64]
 
-for i in 0..15:
-  pt[i] = fromHex[byte](pt_hex[i*2..(i*2)+1])
-for i in 0..15:
-  key[i] = fromHex[byte](key_hex[i*2..(i*2)+1])
-for i in 0..15:
-  ct[i] = fromHex[byte](ct_hex[i*2..(i*2)+1])
+  for i in 0..15:
+    pt[i] = fromHex[byte](pt_hex[i*2..(i*2)+1])
+  for i in 0..15:
+    key[i] = fromHex[byte](key_hex[i*2..(i*2)+1])
+  for i in 0..15:
+    ct[i] = fromHex[byte](ct_hex[i*2..(i*2)+1])
 
-#let
-#  pt_ints = [fromHex[uint64](pt_hex[16..31]), fromHex[uint64](pt_hex[0..15])]
-#  key_ints = [fromHex[uint64](key_hex[16..31]), fromHex[uint64](key_hex[0..15])]
-#  ct_ints = [fromHex[uint64](ct_hex[16..31]), fromHex[uint64](ct_hex[0..15])]
+  # do the key schedule
+  key_schedule(key, rks)
 
-# do the key schedule
-var
-  rks: array[32, uint64]
-key_schedule(key, rks)
+  var output_ct: array[16, byte]
+  var output_pt: array[16, byte]
 
-test "can convert to input":
-  let
-    key_ints = [fromHex[uint64](key_hex[16..31]), fromHex[uint64](key_hex[0..15])]
-    key_ints_2 = to_input(key)
-  check (key_ints == key_ints_2)
+  # test regular encrypt
 
-test "can convert to output":
-  let
-    key_ints = [fromHex[uint64](key_hex[16..31]), fromHex[uint64](key_hex[0..15])]
-    key_ints_2 = to_output(key_ints)
-  check (key == key_ints_2)
+  encrypt(output_ct, pt, rks)
+  decrypt(output_pt, ct, rks)
 
-test "can encrypt":
-  var output: array[16, byte]
-  encrypt(output, pt, rks)
-  check (output == ct)
+  check (output_ct == ct)
+  check (output_pt == pt)
 
-test "can encrypt_otf":
-  var output: array[16, byte]
-  encrypt_otf(output, pt, key)
-  check (output == ct)
+  # test otf encrypt
 
-test "can decrypt":
-  var output: array[16, byte]
-  decrypt(output, ct, rks)
-  check (output == pt)
+  encrypt_otf(output_ct, pt, key)
+  check (output_ct == ct)
+
+  return true
+
+test "test_vectors":
+  for i, vector in test_vectors:
+    discard run_test(vector[0], vector[1], vector[2])
+    echo i, " OK"
 
 test "bench":
-  const ITERS = 1_000_000
-  var
-    output: array[16, byte]
-    begin = getMonoTime()
-    delta = (getMonoTime() - begin).inMilliseconds()
+  let
+    vec = test_vectors[0]
+    start = getMonoTime()
 
-  # benchmark
-  begin = getMonoTime()
-  for i in 0..ITERS:
-    encrypt(output, pt, rks)
-  delta = (getMonoTime() - begin).inMilliseconds()
-  echo "encrypt - 1 mil blocks in ", $delta, " ms"
+  var buf1: array[16, byte]
+  for i in 0..1_000_000:
+    encrypt_otf(buf1, buf1, buf1)
 
-  # benchmark
-  begin = getMonoTime()
-  for i in 0..ITERS:
-    encrypt_otf(output, pt, key)
-  delta = (getMonoTime() - begin).inMilliseconds()
-  echo "encrypt_otf - 1 mil blocks in ", $delta, " ms"
+  let
+    finish = getMonoTime()
+    delta = finish-start
 
-  # benchmark
-  begin = getMonoTime()
-  for i in 0..ITERS:
-    decrypt(output, ct, rks)
-  delta = (getMonoTime() - begin).inMilliseconds()
-  echo "decrypt - 1 mil blocks in ", $delta, " ms"
+  echo &"{delta}"
